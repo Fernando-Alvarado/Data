@@ -17,7 +17,7 @@ datos_sen <- read.csv("SEN_2024.csv", sep = ",", header = TRUE) #leemos el archi
 datos_indicadores <- read.csv("indicadores.csv", header = TRUE, sep = ",") #leemos el archivo de indicadores # nolint
 
 #Primer filtro para seleccionar las columans que nos interesan
-datos_sen_selec <- datos_sen %>% select("ID_DISTRITO_FEDERAL", "PAN","PRI","PRD","PVEM","PT","MC","MORENA","PAN.PRI.PRD","PAN.PRI","PAN.PRD","PRI.PRD","PVEM_PT_MORENA","PVEM_PT","PVEM_MORENA","PT_MORENA","TOTAL_VOTOS_CALCULADO") # nolint
+datos_sen_selec <- datos_sen %>% select("ID_ENTIDAD", "PAN","PRI","PRD","PVEM","PT","MC","MORENA","PAN.PRI.PRD","PAN.PRI","PAN.PRD","PRI.PRD","PVEM_PT_MORENA","PVEM_PT","PVEM_MORENA","PT_MORENA","TOTAL_VOTOS_CALCULADO") # nolint
 
 
 
@@ -56,10 +56,26 @@ reempazar_na <- function(dataframe) {
 datos_sen_selec <- reempazar_na(datos_sen_selec)
 datos_indicadores <- reempazar_na(datos_indicadores)
 
-#Quiero ver que con que tipos de datos estoy trabajando en mis dataframes
-print((head(datos_sen_selec)))
-print((head(datos_indicadores)))
+colnames(datos_indicadores)[colnames(datos_indicadores) == "ID_Entidad"] <- "ID_ENTIDAD"
+#vamos a cambiar el tpo de datos a factor
+datos_sen_selec$ID_ENTIDAD <- as.factor(datos_sen_selec$ID_ENTIDAD)
+datos_indicadores$ID_ENTIDAD <- as.factor(datos_indicadores$ID_ENTIDAD)
+
+#Ahora vamos a agrupar los datos de las senadurias por distrito para poder hacer el merge ya que tenemos muchso datos repetidos
+#datos_sen_agrupados 
+
+datos_sen_agrupados <- datos_sen_selec %>%
+  group_by(ID_ENTIDAD) %>%
+  summarise(across(everything(), ~ sum(.x, na.rm = TRUE)))
+
+datos_indicadores_agrupados <- datos_indicadores %>%
+  group_by(ID_ENTIDAD) %>%
+  summarise(across(everything(), ~ sum(.x, na.rm = TRUE)))
+#Vamos a hacer el merge de los dos dataframes
+datos_limpios <- merge(datos_sen_agrupados, datos_indicadores_agrupados, by = 'ID_ENTIDAD')
 
 
+print(head(datos_limpios))
 
 
+print("end")
