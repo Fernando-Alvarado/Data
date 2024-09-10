@@ -94,4 +94,39 @@ datos_limpios <- merge(datos_sen_agrupados, datos_indicadores, by = 'Distrito')
 #datos_sen_selec <- datos_sen %>% select("ID_DISTRITO_FEDERAL", "PAN","PRI","PRD","PVEM","PT","MC","MORENA","PAN.PRI.PRD","PAN.PRI","PAN.PRD","PRI.PRD","PVEM_PT_MORENA","PVEM_PT","PVEM_MORENA","PT_MORENA","TOTAL_VOTOS_CALCULADO") # nolint
 
 
-datos_coalicion <- datos_limpios %>% select("PVEM_PT_MORENA","PVEM","PT","MORENA","PVEM_PT","PVEM_MORENA","PT_MORENA","TOTAL_VOTOS_CALCULADO") # nolint
+datos_coalicion <- datos_limpios %>% select("PVEM_PT_MORENA","PVEM","PT","MORENA","PVEM_PT","PVEM_MORENA","PT_MORENA") # nolint
+suma_total_votos <- sum(rowSums(datos_limpios %>% select("TOTAL_VOTOS_CALCULADO")))
+
+suma_coalicion <-sum(rowSums(datos_coalicion))
+
+print("Respondiendo pregunta 2")
+print(paste("El porcentaje de la coalicion es:", (suma_coalicion / suma_total_votos)*100))
+
+
+#Respondiendo la pregunta 3 
+
+datos_diagrama <-datos_limpios %>% select("PVEM_PT_MORENA","PVEM","PT","MORENA","PVEM_PT","PVEM_MORENA","PT_MORENA","TOTAL_VOTOS_CALCULADO", "Porcentaje1", "Porcentaje2", "Porcentaje3" )
+
+datos_diagrama$total <- rowSums(datos_diagrama[, c("PVEM_PT_MORENA","PVEM","PT","MORENA","PVEM_PT","PVEM_MORENA","PT_MORENA")])
+
+#Grafica 1
+
+ggplot(datos_diagrama, aes(x = total, y = Porcentaje1)) + 
+  geom_point(color = "red") +
+  labs(title = "Diagrama de dispersión entre el Total Coalicion y el porcentaje 1", x = "Total", y = "porcentaje 1")
+
+#Grafica 1
+
+ggplot(datos_diagrama, aes(x = total, y = Porcentaje2)) + 
+  geom_point(color = "blue") +
+  labs(title = "Diagrama de dispersión entre el Total Coalicion y el porcentaje 2", x = "Total", y = "porcentaje 2")
+
+#Grafica 1
+
+ggplot(datos_diagrama, aes(x = total, y = Porcentaje1)) + 
+  geom_point(color = "black") +
+  labs(title = "Diagrama de dispersión entre el Total Coalicion y el porcentaje 3", x = "Total", y = "porcentaje 3")
+
+
+#Por tiempo ya no puede hacer los otros incisos, pero les juro que fue trabajo honesto y unas buenas desveladas :( jajajajajajaja
+
