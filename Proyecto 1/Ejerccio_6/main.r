@@ -48,7 +48,7 @@ grafica_modelo(x)
 
 
 
-#Verificando si se cumplen los supuestos del modelo de regresion lineal
+# Inciso I) Verificando si se cumplen los supuestos del modelo de regresion lineal
 
 #Checando  homocedasticidad por medio de la grafica propia de R
 
@@ -111,6 +111,10 @@ plot(modelo_transformado, 2) #Checar normalidad, por defecto en R
 lawstat::runs.test(ResiduosModelo$.std.resid, plot.it = TRUE) #Checar aleatoriedad
 
 
+# 
+#  Con todas estas pruebas podemos concluir que nuestro modelo de regresion lineal cumple con los supuestos de linealidad, homocedasticidad, normalidad y aleatoriedad
+#  y ya con esto podemos haeer predicciones con nuestro modelo de regresion lineal
+# 
 
 
 
