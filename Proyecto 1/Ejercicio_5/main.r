@@ -27,6 +27,7 @@ str(dataMed) #Cargando una vista previa de nuestros datos
 #--Podemos observar que que tenemos 3 variables,  una de tipo numerico y dos de tipo caracter 
 
 
+
 #Vamos a modificar los datos de tipo caracter a categoricos para poder trabajar con ellos
 dataMed$Med = as.factor(dataMed$Med)
 dataMed$Edad = as.factor(dataMed$Edad)
@@ -77,6 +78,13 @@ shapiro.test(dataFil$Y[dataFil$Med=="No"])
 nortest::lillie.test(dataFil$Y[dataFil$Med=="No"])
 tseries::jarque.bera.test(dataFil$Y[dataFil$Med=="No"])
 #Con estas preubas individuales tuvimos un mejor resultado, por lo que podemos concluir que tenemos normalidad en cada grupo y sobre la varible dependiente
+
+#resumen del modelo y tests 
+summary(modelo)
+AIC(modelo)
+BIC(modelo)
+
+
 
 
 #-------------------------------------------------------------------------------------------

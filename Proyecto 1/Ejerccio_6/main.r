@@ -12,6 +12,7 @@ library(lmtest) # checar homocedasticidad
 library(car) # checar linealidad
 library(broom) # checar normalidad y calcular residuales
 library(lawstat) #libreria para checar aleatoriedad
+library(multcomp) #Libreria para hacer pruebas de hipotesis
 
 
 #Datos sobre los pinguinos
@@ -23,6 +24,8 @@ Datos6 = data.frame(cbind(x, y))
 kable(t(Datos6)) %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
+
+#Inciso I
 
 #Ajusstando el modelo de regresion lineal
 modelo = lm(y ~ x, data = Datos6)
@@ -115,6 +118,36 @@ lawstat::runs.test(ResiduosModelo$.std.resid, plot.it = TRUE) #Checar aleatoried
 #  Con todas estas pruebas podemos concluir que nuestro modelo de regresion lineal cumple con los supuestos de linealidad, homocedasticidad, normalidad y aleatoriedad
 #  y ya con esto podemos haeer predicciones con nuestro modelo de regresion lineal
 # 
+
+
+#Obteniendo los valores de b_0 y b_1
+b0 <- coef(modelo_transformado)[1]
+b1 <- coef(modelo_transformado)[2]
+print(paste("El valor de b0 es: ", b0, " y el valor de b1 es: ", b1))
+
+
+#Inciso II
+
+##Los investigadores tienen la sospecha de que en promedio se puede decir que la diferencia entre el peso mayor y el peso menor es constante (es decir, no depende del peso del huevo menor observado). Usando el modelo en I) realice una prueba de hipótesis para responder la pregunta de los investigadores, describiendo con detalle las hipótesis que se contrastan.
+MatZ0Z1 = matrix(c(0, 1), ncol = 2, nrow = 1) #Matriz para saber que paremetro estamos contrastando
+c = 1 #valor de la preuba, para ver si  efectivamente es constante la diferencia entre el peso mayor y el peso menor
+prueba = glht(modelo_transformado, linfct = MatZ0Z1, rhs = c, alternative = "two.sided")
+summary(prueba)
+#--Con esta prueba podemos concluir que la diferencia entre el peso mayor y el peso menor no es constante, por lo que el perso varia
+
+
+#Inciso III
+
+##Posteriormente se observa el peso de los huevos de una nueva nidada, observándose un peso de 70 y 140 gramos. Usando un intervalo adecuado, comente sobre la sospecha de que la nidada de huevos sí proviene de pingüinos Macaroni
+nueva_nidada = data.frame(x_transformed = c(70^4, 140)) #Datos de la nueva nidada
+prediccion = predict(object = modelo_transformado,
+        newdata = nueva_nidada,
+        interval = "prediction",
+        level = 0.95)
+summary(prediccion)
+#--Con esete resultado podemos concluir que el que la anidada de huevos no proviene de los pinguinos de Macaroni, ya que el intervalo de confianza no contiene a los valores de la nueva nidada
+
+
 
 
 
