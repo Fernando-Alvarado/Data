@@ -25,7 +25,7 @@ kable(t(Datos6)) %>%
   kable_styling(bootstrap_options = "striped", full_width = F)
 
 
-#Inciso I
+#Inciso I --------------------------------------------------------------------------
 
 #Ajusstando el modelo de regresion lineal
 modelo = lm(y ~ x, data = Datos6)
@@ -49,9 +49,6 @@ grafica_modelo = function(varx) {
 grafica_modelo(x)
 
 
-
-
-# Inciso I) Verificando si se cumplen los supuestos del modelo de regresion lineal
 
 #Checando  homocedasticidad por medio de la grafica propia de R
 
