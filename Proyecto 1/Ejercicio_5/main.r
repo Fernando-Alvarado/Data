@@ -185,19 +185,3 @@ summary(prueba2)
 
 
 
-#-------------------------------------------------------------------------------------------
-#Notas:
-#-------------------------------------------------------------------------------------------
-#En este caso, para ver lsa preubas del modelo tengo que hacer las pruebas para ambos modelos
-# El profe, como tenia ambas variables categoricas en una sola columan pudo hacer 1 preuba
-#para ambas cosas
-#str(dataMed) #Cargando una vista previa de nuestros datos
-
-
-#Vamos a hacer una filtracion de los dato para quitar una poblacion
-#dataFil = dataMed %>% dplyr::select(Y, Med)  %>% filter (Med %in% c("Si", "No"))  #Filtrando los datos para solo tener dos categorias
-#levels(dataFil$Med) <- list(Si = "Si", No = "No") #Cambiamos los nombres de las categorias
-#dataFil 
-#
-#
-#Creando otro filtro para trabajar con los datos, separando las dos clases (A quienes se les aplico el medicamento y a quienes no)
