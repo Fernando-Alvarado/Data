@@ -155,7 +155,7 @@ head(ResiduosModeloEdad) #Veamos que nos regresa la funcion augment
 shapiro.test(ResiduosModeloEdad$.std.resid) 
 #El valor de este pruena fue de 0.8304, casi se rechaza, ver si haciendo una transformacion a los datos se puede mejorar
 
-#Otra prueba ms robusta de normalidad en cada grupo y sobre la variable dependiente
+#Otra prueba mas robusta de normalidad en cada grupo y sobre la variable dependiente
 dataFil2
 shapiro.test(dataFil2$Y[dataFil2$Med=="Si"])
 nortest::lillie.test(dataFil2$Y[dataFil2$Med=="Si"])
