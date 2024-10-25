@@ -94,6 +94,7 @@ lmtest::bptest(modelo_transformado)
 #Nuestro modelo pasa de nuevo la prueba de homocedasticidad
 
 #Veamos de nuevo lineaalidad por medio de la prueba de hipotesis en R
+plot(modelo_transformado, 1)
 boxTidwell(y~x_transformed, data=Datos6) 
 #-- Con esta prueba podemos observar que ya se cumple el supuesto de linealidad
 

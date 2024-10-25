@@ -1,0 +1,286 @@
+---
+title: 'Intervalos de confianza y predicción'
+author: 
+date: "21/10/24"
+geometry: margin = 1.5 cm
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+rm(list=ls(all.names = T))
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+Una substancia usada en investigación médica es transportada en aviones de carga en paquetes de 1,000 ampolletas. Los datos que se muestran abajo corresponden a 10 envíos. En estos se reportan el número de veces que el paquete es transferido de un avión a otro en la ruta de envío X, y el número de ampolletas encontradas rotas al llegar a su destino Y. Suponga que el modelo de regresión lineal simple es apropiado $y_{i}=\beta_{0}+\beta_{1}x_{i}+\epsilon_{i}$.
+
+```{r}
+x=c(1 , 0 , 2 , 0 , 3 , 1 , 0 , 1 , 2 , 0)
+y=c(16 , 9 , 17 , 12 , 22 , 13 , 8 , 15 , 19 , 11)
+Datos=data.frame(cbind(x,y))
+head(Datos)
+```
+
+
+```{r, fig.align="center", fig.dim=c(4,2)}
+library(ggplot2)
+ggplot(data=Datos, aes(x=x,y=y))+ geom_point(colour="black")+theme_classic()
+
+```
+
+  
+  
+**i) Obtenga la función de regresión estimada. ¿La función de regresión lineal parece representar bien a las observaciones?**
+
+Comencemos el inciso ajustando nuestro modelo de regresión lineal.
+```{r}
+fit <- lm(y~x, data=Datos)
+fit$coefficients
+```
+Entonces nuestro modelo ajustado es: $\widehat{y} = 10.2 + 4 x$
+
+La interpretación de nuestros coeficientes es:
+
++ Para $\widehat{\beta}_{0}$: En caso de que el número de veces que el paquete es transferido de un avión a otro sea cero, se estima que el número PROMEDIO de ampolletas rotas sea $10.2\approx 10$.
+
++ Para $\widehat{\beta}_{1}$: Por cada vez adicional que el paquete sea transferido de un avión a otro, se espera que el número PROMEDIO de ampolletas rotas aumente en 4.
+
+Para contestar la pregunta del inciso será necesario graficar nuestros datos y la recta ajustada.
+```{r, fig.align="center", fig.dim=c(4,2)}
+par(mar=c(2,3,1,1))
+plot(Datos$x, Datos$y)
+abline(fit$coefficients, col="red")
+```
+
+Podemos notar que parece que la varianza va disminuyendo conforme el numero de transferencias aumenta, sin embargo tenemos que mencionar que disponemos de muy pocos datos lo que nos limita un poco en nuestro análisis. Además, parece que nuestra recta si se ajusta bien a nuestros datos.
+
+---
+
+**ii) Obtenga un estimador puntual del número esperado de ampolletas rotas cuando se hace una sola transferencia, $x_{h}=1$.**
+
+Se desea estimar $E(y|x=1) = \widehat{\beta}_{0}+\widehat{\beta}_{1}(1) = 10.2 + 4(1) = 14.2$
+
+O bien, podemos usar la función *predict()* definiendo primero el valor de nuestra variable x en un dataframe (así lo requiere la función predict). 
+
+IMPORTANTE: no olvides que el nombre de la columna del dataframe debe ser el mismo que el nombre de la variable que se está usando en el modelo, en nuestro caso la variable es x.
+
+```{r}
+newdata1 <- data.frame(x=c(1))
+predict(fit, newdata1)
+```
+Entonces dado que se realizó una transferencia de un avión a otro, se espera en promedio que haya aproximadamente 14 ampolletas rotas.
+
+---
+
+**iii)Estime el incremento en el número esperado de ampolletas rotas cuando se realizan dos transferencias en comparación con una.**
+
+Nota que lo que pide el ejercicios se puede traducir a: $E(y|x=2)-E(y|x=1)$ y esto es equivalente a:
+
+$$E(y|x=2)-E(y|x=1) = \widehat{\beta}_{0}+2\widehat{\beta}_{1}-(\widehat{\beta}_{0}+\widehat{\beta}_{1})=\widehat{\beta}_{1}$$
+Por lo que, la estimación del número esperado de ampolletas rotas cuando se realizan dos transferencias en comparación con una es $\widehat{\beta}_{1}=4$.
+
+También podemos resolver este inciso usando la función *predict()*.
+```{r}
+newdata2<- data.frame(x=c(2))
+predict(fit, newdata2) - predict(fit,newdata1)
+```
+
+---
+
+**iv) Estime $\widehat{\beta}_{1}$ con un intervalo de confianza al 95%. Inteprete.**
+
+Recordemos que el intervalo de confianza para $\widehat{\beta}_{1}$ es:
+
+$$\left[\widehat{\beta}_{1}-t_{(n-2)}^{1-\alpha/2} \sqrt{\frac{\widehat{\sigma}^2}{SSx}},\widehat{\beta}_{1}+t_{(n-2)}^{1-\alpha/2} \sqrt{\frac{\widehat{\sigma}^2}{SSx}}\right]$$
+Y en R podemos calcularlo fácilmente con la función *confint()*.
+```{r}
+confint(fit,level = 0.95)
+```
+Notamos que en la salida nos arroja el intervalo al 95% de confianza para $\widehat{\beta}_{0}$ y para $\widehat{\beta}_{1}$. Para seleccionar solo el de $\widehat{\beta}_{1}$ hacemos:
+```{r}
+
+confint(fit,level = 0.95)[2,]
+```
+Interpretación: 
+Con un 95% de confianza por cada vez adicional que el paquete es transferido de un avión a otro, el aumento en el número promedio de ampolletas rotas se encuentra entre 2.9 y 5.08.
+
+---
+
+**v) Realice una prueba de hipótesis para decidir si existe una relación lineal entre el número de veces que un paquete de ampolletas es transferido (x) y el número de ampolletas rotas (y). Use un nivel de significancia de .05.**
+
+Básicamente nos piden que mostremos que la variable x sí nos está ayudando a explicar a la variable y. Es decir:
+$$H_{0}:\beta_{1} = 0 \hspace{10 pt} vs \hspace{10 pt} H_{a}: \beta_{1}\not = 0$$
+El pvalue asociado a esta prueba la podemos encontrar fácilmente en el *summary(fit)*. O bien, podemos usar la función *glht()* de la libreria *multcomp*.
+
+```{r, message=F, warning=F}
+library(multcomp)
+Matz0z1 <- matrix(c(0,1), ncol = 2)
+c <- 0
+prueba<- glht(model = fit, linfct = Matz0z1, rhs = c, alternative = "two.sided")
+summary(prueba)
+```
+
+Como el pvalue es menor que la significancia de 0.05, se rechaza la hipótesis nula, por lo que hay evidencia estadística para decir que el número de veces que un paquete es transferido de un avión a otro (x) nos ayuda a explicar el número de ampolletas rotas (y).
+
+---
+
+**vi) $\beta_{0}$ aquí representa el número medio de ampolletas rotas cuando no hay transferencias, es decir, cuando $x_{h}=0$. Obtenga un intervalo de confianza para $\beta_{0}$ e interprételo.**
+
+Recordamos que el intervalo al $(1-\alpha)100\%$ de confianza para $\beta_{0}$ es:
+
+
+$$\left[\widehat{\beta}_{0}-t_{(n-2)}^{1-\alpha/2} \sqrt{\frac{\widehat{\sigma}^2 \sum_{i=1}^{n}x_{i}^2}{nSSx}},\widehat{\beta}_{0}+t_{(n-2)}^{1-\alpha/2} \sqrt{\frac{\widehat{\sigma}^2 \sum_{i=1}^{n}x_{i}^2}{nSSx}}\right]$$
+De manera similar a cómo se hizo en el inciso *iv)*, usaremos la función *confint()*.
+
+```{r}
+confint(fit,level = 0.95)[1,]
+```
+Interpretación: 
+Con un 95% de confianza, en caso de no haber transferencias de un avión a otro, el número promedio de ampolletas rotas se encuentra entre 8.67 y 11.72.
+
+---
+
+**vii) Un consultor ha indicado, basado en experiencia previa, que el número medio de ampolletas rotas no excede 9 cuando no se hacen transferencias. Realice una prueba de hipótesis apropiada con una significancia de .025 para comentar sobre lo indicado por el experto.**
+
+Primero nota que lo que propone el investigador en términos de $\beta_{0}$ y $\beta_{1}$ es: 
+$$\beta_{0}+\beta_{1}(0) = \beta_{0} \leq 9$$
+
+Y lo anterior será nuestra hipótesis alternativa pues de esta forma controlaremos la probabilidad de cometer el error tipo I. De esta forma se quiere contrastar que:
+
+$$H_{0}: \beta_{0} \leq 9 \hspace{10 pt} vs\hspace{10 pt} H_{a}:\beta_{0} > 9$$
+Usando nuevamente la función *glht()*:
+```{r, message=F, warning=F}
+library(multcomp)
+Matz0z1 <- matrix(c(1,0), ncol = 2)
+c2 <- 9
+prueba2<- glht(model = fit, linfct = Matz0z1, rhs = c2, alternative = "greater")
+summary(prueba2)
+```
+
+Como el pvalue fue mayor a nuestra significancia de 0.025, no se rechaza $H_{0}$ por lo tanto, no hay evidencia estadística que indique que cuando no hay transferencias, el número promedio de ampolletas rotas no excede de 9. 
+Esto quiere decir que no encontramos evidencia en los datos que justifique lo que el investigador menciona.
+
+---
+
+**viii) Debido a cambios en las rutas de la aerolínea, los envíos podrían ser transferidos más frecuentemente que en el pasado. Se desea saber cual sería el número promedio de ampolletas rotas si se hicieran cuatro transferencias, $x_{h}=4$. Use una confianza de 99% para dar un intervalo e interprete sus resultados.**
+
+En este inciso estamos buscando un intervalo de confianza para $\beta_{0}+\beta_{1}(4)$.
+
+Recordamos que un intervalo al $(1-\alpha)100\%$ de confianza para $\theta = z_{0}\beta_{0}+z_{1}\beta_{1}$ con $z_{0}=1$ y $z_{1}=x$ está dado por:
+
+$$\left[\widehat{\beta}_{0}+\widehat{\beta}_{1}x- t_{(n-2)}^{1-\alpha/2}\sqrt{\widehat{\sigma}^{2} \left(\frac{1}{n}+\frac{(x-\bar{x})^2}{SSx}\right)},\widehat{\beta}_{0}+\widehat{\beta}_{1}x+ t_{(n-2)}^{1-\alpha/2}\sqrt{\widehat{\sigma}^{2} \left(\frac{1}{n}+\frac{(x-\bar{x})^2}{SSx}\right)}\right]$$
+
+Podemos calcularlo a mano:
+```{r}
+B0<- fit$coefficients[1]
+B1<- fit$coefficients[2]
+z1 <- 4
+alpha <- 0.01
+n <- length(x)
+t <- qt(p = 1-alpha/2,df = n-2)
+sigma2 <- summary(fit)$sigma^2
+SSx <- sum((x-mean(x))^2)
+liminf <- B0+B1*z1 - t*sqrt(sigma2*(1/n + (z1-mean(x))^2/SSx))
+limsup <- B0+B1*z1 + t*sqrt(sigma2*(1/n + (z1-mean(x))^2/SSx))
+c(liminf,limsup)
+```
+
+Y si usamos la función *predict()*:
+```{r}
+newdata3 <- data.frame(x=c(4))
+predict(fit, newdata3, interval = "confidence", level = 0.99)
+```
+
+Interpretación: 
+con una confianza del 99%, el número promedio de ampolletas rotas cuando se realiza 4 transferencias está contenido entre 21.22 y 31.17.
+
+---
+
+**ix) En el próximo envío habrá dos transferencias. Obtenga un intervalo para el número de ampolletas rotas en el embarque. Interprete sus resultados.**
+
+Nota que por el contexto del inciso lo que se busca es una intervalo de predicción para $y_{h}$, donde $y_{h}$ es un nuevo valor respuesta.
+
+Recordando de las notas, el intervalo de predicción es:
+
+$$\left[\widehat{\beta}_{0}+\widehat{\beta}_{1}x_{h}- t_{(n-2)}^{1-\alpha/2}\sqrt{\widehat{\sigma}^{2} \left(1+\frac{1}{n}+\frac{(x_{h}-\bar{x})^2}{SSx}\right)},\widehat{\beta}_{0}+\widehat{\beta}_{1}x_{h}+ t_{(n-2)}^{1-\alpha/2}\sqrt{\widehat{\sigma}^{2} \left(1+\frac{1}{n}+\frac{(x_{h}-\bar{x})^2}{SSx}\right)}\right]$$
+El cual puede ser calculado de manera muy similar al anterior, solo se le suma 1 dentro de la raíz.
+```{r}
+B0<- fit$coefficients[1]
+B1<- fit$coefficients[2]
+z1 <- 2
+alpha <- 0.01
+n <- length(x)
+t <- qt(p = 1-alpha/2,df = n-2)
+sigma2 <- summary(fit)$sigma^2
+SSx <- sum((x-mean(x))^2)
+liminf <- B0+B1*z1 - t*sqrt(sigma2*(1 + 1/n + (z1-mean(x))^2/SSx))
+limsup <- B0+B1*z1 + t*sqrt(sigma2*(1 + 1/n + (z1-mean(x))^2/SSx))
+c(liminf,limsup)
+```
+
+Nuevamente podemos usar la función *predict()* solo que ahora debemos especificar el parámetro *interval* con la instrucción *"prediction"*.
+
+```{r}
+newdata4<- data.frame(x=c(2))
+predict(fit, newdata4, interval = "prediction", level = 0.99)
+```
+Interpretación: 
+con una confianza del 99%, el número promedio de ampolletas rotas en el PRÓXIMO envío, el cual tendrá 2 transferencias, estará contenido entre 12.74 y 23.65.
+
+---
+
+**x) En los días siguientes, se harán tres envíos independientes, en cada uno habrá dos transferencias. Obtenga un intervalo al 99% para el número medio de ampolletas rotas en los tres envíos. Convierta este intervalo en uno al 99% para el número total de ampolletas rotas en los tres envíos.**
+
+Primero notemos que el numero medio de ampolletas rotas en 3 envíos es $\bar{y}_{h} = \frac{1}{m}\sum_{i=1}^{3}y_{h}$. Esto se puede ver como una combinación lineal de $y_{h_{1}},y_{h_{2}},y_{h_{3}}$.
+
+Recordando las notas, un intervalo de predicción para $\sum_{j=1}^{m} a_{j}y_{h_{j}}$ con $a_{1},...,a_{m}$ constantes es:
+
+$$\left[\widehat{\beta}_{0} \sum_{j=1}^{m} a_{j}+\widehat{\beta}_{1}\sum_{j=1}^{m} a_{j}x_{h_{j}}\pm t_{(n-2)}^{1-\alpha/2}\sqrt{\widehat{\sigma}^{2} \left(\sum_{j=1}^{m} a_{j}^{2}+\frac{(\sum_{j=1}^{m} a_{j})^2}{n}+\frac{(\sum_{j=1}^{m} a_{j}x_{h_{j}}-\bar{x} \sum_{j=1}^{m} a_{j})^2}{SSx}\right)}\right]$$
+
+Donde $a_{j} = \frac{1}{m}$ para $j=1,2,3$ y donde $m=3$.
+Entonces:
+$$\sum_{j=1}^{m} a_{j} =\frac{1}{3}+\frac{1}{3}+\frac{1}{3}=1, \hspace{10 pt} \sum_{j=1}^{m} a_{j}x_{h_{j}} = \frac{2}{3}+\frac{2}{3}+\frac{2}{3}=2, \hspace{10 pt} \sum_{j=1}^{m} a_{j}^2 = \frac{1}{3^2}+\frac{1}{3^2}+\frac{1}{3^2}=\frac{1}{3}$$
+Por lo que el intervalo anterior se convierte en:
+$$\left[\widehat{\beta}_{0}+\widehat{\beta}_{1}x_{h}\pm t_{(n-2)}^{1-\alpha/2}\sqrt{\widehat{\sigma}^{2} \left(\frac{1}{m}+\frac{1}{n}+\frac{(x_{h}-\bar{x})^2}{SSx}\right)}\right]$$
+Desafortunadamente ahora solo podemos calcular lo anterior a mano:
+```{r}
+B0<- fit$coefficients[1]
+B1<- fit$coefficients[2]
+z1 <- 2
+alpha <- 0.01
+n <- length(x)
+m <- 3
+t <- qt(p = 1-alpha/2,df = n-2)
+sigma2 <- summary(fit)$sigma^2
+SSx <- sum((x-mean(x))^2)
+liminf <- B0+B1*z1 - t*sqrt(sigma2*(1/m + 1/n + (z1-mean(x))^2/SSx))
+limsup <- B0+B1*z1 + t*sqrt(sigma2*(1/m + 1/n + (z1-mean(x))^2/SSx))
+c(liminf,limsup)
+```
+
+Interpretación: 
+con una confianza del 99%, el número medio de ampolletas rotas en los próximos 3 envíos, los cuales tendrán 2 transferencias cada uno, estará contenido entre 14.56 y 21.83.
+
+Para la segunda parte del inciso debemos recordar de las notas que: 
+Si $\tau(\theta)$ es una función creciente y $[T_1(y_{1},...,y_{n}), T_2(y_{1},...,y_{n})]$ es un intervalo de confianza para $\theta$, entonces $[\tau(T_1(y_1, ..., y_n)), \tau(T_2(y_1, ..., y_n))]$
+es un intervalo de confianza para $\tau(\theta)$. Algo similar a lo anterior aplica para funciones monótonas $\tau(\theta)$.
+
+En nuestro caso $\tau(\bar{y}_{h}) = 3 \bar{y}_{h} = \sum_{j=1}^3 y_{h_{j}}$.
+
+```{r}
+c(3*liminf,3*limsup)
+```
+
+Interpretación:
+Con una confianza del 99%, el número total de ampolletas rotas en los próximos 3 envíos, los cuales tendrán 2 transferencias cada uno, estará contenido entre 43.69 y 65.5.
+
+---
+
+**xi) Calcule $R^2$. ¿Qué proporción de la variación en Y es explicada por la introducción de X en el modelo de regresión?**
+```{r}
+summary(fit)$r.squared
+```
+
+El 90% de la variabilidad en el número de ampolletas rotas encontradas al llegar a su lugar de destino (y) es explicada por la variable que indica el número de veces que el paquete es transferido de un avión a otro (x).
+
+
