@@ -30,7 +30,7 @@ data$Sexo = factor(data$Sexo)
 data$Trat = factor(data$Trat)
 
 str(data) #Cargando una vista previa de nuestros datos
-#Donde en este caso, Hobre y Control seran nuestros niveles de referencia 
+#Donde en este caso, Hombre y Control seran nuestros niveles de referencia 
 
 #1) Empecemos a hacer un Analisis descriptivo de los datos 
 
@@ -52,6 +52,13 @@ boxplot(Puntaje ~ Trat * Sexo, data = data,
 #Con esta grafica  podemos ver que el comportamiento de los medicamentes, ambos funcionan, pero al parecer el tratamiento 1 parece funcionar
 #mejor tanto en hombres como en mujeres ya que baja mas en media el puntuaje de depresion, pero tendriamos que hacer un analisis mas profundo
 
+
+#Construyendo el modelo de regresion lineal multiple
+#Expresion matematica del modelo
+#Puntuaje = Trat + Sexo + Trat*Sexo
+
+modelo <- lm(Puntaje ~ Trat * Sexo, data = datos)
+summary(modelo)
 
 
 
