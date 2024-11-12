@@ -162,7 +162,7 @@ summary(glht(modelo, linfct = K4_2, rhs = m), test= Ftest())
 #Por el paso de arriba observamos que debemos sacar a b_4, para ello, proponemos el sigueinte modelo 
 names(data)
 
-modelo_reducido <- lm(Puntaje ~ Sexo + Trat + Sexo:TratTrat2, data = data) #????????????? No se como hacer el modelo reducido
+modelo_reducido <- lm(Puntaje ~ Sexo + Trat +I(Sexo*Trat="Trat2") , data = data) #????????????? No se como hacer el modelo reducido
 
 summary(modelo)
 summary(modelo_reducido)
