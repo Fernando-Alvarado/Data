@@ -56,7 +56,7 @@ ggpairs(data)
 #sexo tiene solo dos niveles mientras que tratamiento tiene 3 niveles y la varible continua al parecer tendria una
 #distribucion normal, pero tendriamos que verificarlo 
 
-boxplot(Puntaje ~ Trat * Sexo, data = data,
+boxplot(Puntaje ~ Trat * Sexo, data = data,#Un consejo a a la hora de correr esta grafica es que la hagan mas grande, ya que quita los labs del eje x, por que no caben todos y se hace un poco complicado de interpretar
         main = "Boxplot de  Tratamiento, Sexo vs Puntaje Depresion",
         xlab = "Tratamiento y Sexo",
         ylab = "Puntaje de Depresión",
@@ -183,6 +183,64 @@ anova(modelo_reducido, modelo) #Esta curioso, me dio que el modelo original es m
 #E(puntaje;Trat = Trat1,Sexo = m)   =  B0 + B1*X_t1 
 #E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B2*X_t2 + B3*Y_m*X_t2
 #
+
+#Obs: para los sigueintes incisos donde hare una comparacion sobre el desempeño de los medicamentos, usare el modelo sin reducier
+#ya que por la prueba anova que comparaba ambos modelos, salio que el mejor modelo era el que no estaba reducido 
+
+#Obs: Como intepretacion personal, para comparar si un medicamento es mejor,dividire la prueba de hipotesis en base al sexo, 
+#a esto me refieron que el medicamento A, es mejor que el medicameno B y que el control somo en un sexo particular.
+
+
+#6) Prueba de Hipotesis,  Nuevo tratameinto (Tratamiendo 2), tiene un mejor desempeño 
+#Haciendo la prueba de hip, para los hombres
+#E(puntaje;Trat = Trat2,Sexo = h) >= E(puntaje;Trat = Trat1,Sexo = h) y  E(puntaje;Trat = Trat2,Sexo = h) >= E(puntaje;Trat = Control,Sexo = h)
+# Ho: B3-B2<=0 y B3<=0
+k_6h =matrix(c(0,0,-1,1,0,0,
+             0,0,0,1,0,0), ncol=6, nrow = 2, byrow = TRUE)
+summary(glht(modelo, linfct =k_6h , rhs = c(0,0)), alternative = "less", test = Ftest())
+
+
+
+#Haciendo la prueba de hip, para las mujeres
+#E(puntaje;Trat = Trat2,Sexo = m) >= E(puntaje;Trat = Trat1,Sexo = m) y  E(puntaje;Trat = Trat2,Sexo = m) >= E(puntaje;Trat = Control,Sexo = m)
+# Ho: B3+B5-B2-B4<=0 y B3+B5<=0
+k_6m =matrix(c(0,0,-1,1,-1,1,
+             0,0,0,1,0,1), ncol=6, nrow = 2, byrow = TRUE)
+summary(glht(modelo, linfct =k_6m , rhs = c(0,0)), alternative = "less", test = Ftest())
+
+
+#Conclusion:
+#Hombres:
+# En este caso, observamos que el Nuevo tratameinto (Trat 2) en hombres, no es mejor que el tratamiento 1 y control
+#Mujeres:
+#
+
+
+#7) Preuba de Hipotesis, Tratamiento Actual (Tratamiento 1), tiene un mejor desempeño
+#Haciendo la prueba de hip, para los hombres
+#E(puntaje;Trat = Trat1,Sexo = h) <= E(puntuaje;Trat = Trat2,Sexo = h) y E(puntaje;Trat = Trat1,Sexo = h) <= E(puntaje;Trat = Control,Sexo = h)
+# Ho: B2-B3<=0 y B2<=0
+k_7h =matrix(c(0,0,1,-1,0,0,
+             0,0,1,0,0,0), ncol=6, nrow = 2, byrow = TRUE)
+summary(glht(modelo, linfct =k_7h , rhs = c(0,0)), alternative = "less", test = Ftest())
+
+
+#Haciendo la preuba de hip, para las mujeres
+#E(puntaje;Trat = Trat1,Sexo = m) <= E(puntuaje;Trat = Trat2,Sexo = m) y E(puntaje;Trat = Trat1,Sexo = m) <= E(puntaje;Trat = Control,Sexo = m)
+# Ho: B2+B4-B3-B5<=0 y B2+B4<=0
+k_7m =matrix(c(0,0,1,-1,1,-1,
+             0,0,1,0,1,0), ncol=6, nrow = 2, byrow = TRUE)
+summary(glht(modelo, linfct =k_7m , rhs = c(0,0)), alternative = "less")
+
+
+#Conclusion:
+#Hombres:
+#
+#Mujeres:
+#
+
+
+
 
 
 
