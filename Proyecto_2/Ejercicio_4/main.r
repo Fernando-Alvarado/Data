@@ -123,7 +123,7 @@ m_2ceros=c(0,0) #vamos a comparar todas nuestras preubas de hipotesis con cero
 m1 =c(0)
 K4_c = matrix(c(0,1,0,0,0,0), ncol=6, nrow = 1, byrow = TRUE)
 summary(glht(modelo, linfct = K4_c, rhs = m1), test= Ftest())
-#De esta prueba nos dio que el p-value es de: 0.6572, por lo que no se rechaza (Ho) ???????????????????-----------------------------------------------------------------------------------------------Lo puedo interpretar como que no hay una relacion entre la efectividad de los medicamentos y el sexo de la persona?
+#De esta prueba nos dio que el p-value es de: 0.6572, por lo que no se rechaza (Ho) 
 
 
 #(Ho) E(puntaje;Trat = Trat1,Sexo = h) = E(puntaje;Trat = Trat1,Sexo = m) vs (Ha) E(puntaje;Trat = Trat1,Sexo = h) ≠ E(puntaje;Trat = Trat1,Sexo = m)
@@ -132,8 +132,9 @@ K4_1 = matrix(c(0,1,0,0,0,0,
                 0,0,0,0,1,0), ncol=6, nrow = 2, byrow = TRUE)
 summary(glht(modelo, linfct = K4_1, rhs = m_2ceros), test= Ftest())
 #De esta prueba nos dio que el p-value es de: 0.001023 , por lo que  se rechaza (Ho),  
-
+#Hay una diferencia, pero no se sabe si es mejor  en hombres o mujeres el funcionamiento del medicamento
 #Escribimos una prueba simultanea para ver que provoco el rechazo de (Ho)
+
 #Las preubas de hipotesis a Analisas son:
 # H0_1: B_1 = 0 vs Ha_1: B_1 ≠ 0
 # H0_2: B_4 = 0 vs Ha_2: B_4 ≠ 0
@@ -145,7 +146,7 @@ K4_Sim = matrix(c(0,1,0,0,0,0,
 #Corriendo nuestra prueba de hipotesis, simultanea
 summary(glht(modelo, linfct = K4_Sim, rhs = m_sim))
 #Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1 + B5*Y_m*X_t2
-#Lo que nos esta diciendo que posiblemente B_4 no es diferente de 0, por lo que las pendientes de ???????----------------------------------------------------------------------------Como analizar este resultado 
+#Con esto pdemos ver que solo tenemos informacion suficiente para saber que B_4 ≠ 0
 
 
 
@@ -153,19 +154,35 @@ summary(glht(modelo, linfct = K4_Sim, rhs = m_sim))
 #(Ho) B_1 = 0 ^ B_5 = 0 vs (Ha) B_1 ≠ 0 v B_5 ≠ 0
 K4_2 = matrix(c(0,1,0,0,0,0,
                 0,0,0,0,0,1), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct = K4_2, rhs = m), test= Ftest())
+summary(glht(modelo, linfct = K4_2, rhs = m_2ceros), test= Ftest())
 #De esta prueba nos dio que el p-value es de: 0.895 , por lo que no se rechaza (Ho)
 
 #Con los datos anteriores vamos a hacer un modelo reducido, para poder trabajar mejor 
 
+
 #5) Ajustando el modelo reducido
-#Por el paso de arriba observamos que debemos sacar a b_4, para ello, proponemos el sigueinte modelo 
+#Por el paso de arriba observamos que solo se debe quedar b_4, para ello, proponemos el sigueinte modelo 
 names(data)
 
-modelo_reducido <- lm(Puntaje ~ Sexo + Trat +I(Sexo*Trat="Trat2") , data = data) #????????????? No se como hacer el modelo reducido
-
-summary(modelo)
+modelo_reducido <- lm(Puntaje ~  Trat +I((Trat == 'Trat2')*(Sexo == 'Mujer')), data = data) 
+                      
 summary(modelo_reducido)
+#Con este modelo podemos ver que nuestro modelo de regresion si tiene, sentido y podemos trabajar con el 
+
+#Hagamos un pequeña prueba de hipotesis para ver si nuestro modelo reducido es mejor que el modelo orignal 
+anova(modelo_reducido, modelo) #Esta curioso, me dio que el modelo original es mejor que el modelo reducido 
+
+#Dando las expreciones del nuevo modelo de regresion reducido
+#Puntaje = B0 + B1*X_t1 +B2*X_t2  + B3*Y_m*X_t2
+#
+#Vamos a analizar las expresiones de los puntajes promedios para cada nivel de las variables categoricas
+#E(puntaje;Trat = Control,Sexo = h) =  B0  
+#E(puntaje;Trat = Trat1,Sexo = h)   =  B0 + B1*X_t1 
+#E(puntaje;Trat = Trat2,Sexo = h)   =  B0 + B2*X_t2 
+#E(puntaje;Trat = Control,Sexo = m) =  B0 
+#E(puntaje;Trat = Trat1,Sexo = m)   =  B0 + B1*X_t1 
+#E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B2*X_t2 + B3*Y_m*X_t2
+#
 
 
 
