@@ -91,8 +91,23 @@ levels(data$Sexo)
 modelo <- lm( Puntaje~ Sexo*Trat , data = data)
 summary(modelo) #veamos nuestro resumen del modelo de regresion lineal 
 
+
+#Tratemos de ver nuestro modelo de una forma mas grafica
+data$Predicciones <- predict(modelo)
+
+# Crear el gráfico
+ggplot(data, aes(x = Trat, y = Predicciones, color = Sexo, group = Sexo)) +
+  stat_summary(fun = mean, geom = "line", size = 1.2) +  # Líneas de medias por Sexo
+  stat_summary(fun = mean, geom = "point", size = 3) +  # Puntos de medias por Sexo
+  labs(title = "Gráfico de Interacción: Sexo y Tratamiento",
+       x = "Tratamiento",
+       y = "Puntaje promedio predicho") +
+  theme_minimal() +
+  scale_color_brewer(palette = "Set1")  # Mejora estética con colores
+
 length(coef(modelo))
 #Vamos a analizar las expresiones de los puntajes promedios para cada nivel de las variables categoricas
+#Dejare expresada la varaible a lo que correponde las Bi, solo de manera ilustrativa para podecer desarrollar mejor los demas incisos
 #E(puntaje;Trat = Control,Sexo = h) =  B0  
 #E(puntaje;Trat = Trat1,Sexo = h)   =  B0 + B2*X_t1  
 #E(puntaje;Trat = Trat2,Sexo = h)   =  B0 + B3*X_t2 
@@ -112,135 +127,122 @@ summary(modelo) #Nos apoyamos de summary para ver los resultados de la prueba #?
 #4) Vamos a ver si el sexo tiene algun efecto en el puntuaje, i.e. al menos paara un tratamiento existe un efecto derivado del sexo
 
 #Modelo sin sexo
-modelo_sin_sexo <- lm( Puntaje~ Trat , data = data) #??????--------------------------------------------------------------------------------------------------------------------------------------------------- Asi nada mas quito a la variable categorica sexo?
-summary(modelo_sin_sexo) #veamos nuestro resumen del modelo de regresion lineal 
+m_2=c(0,0)
+m_1 =c(0)
+m_3 = c(0,0,0)
+#Vamos a ver si el sexo tiene algun efecto en el puntuaje de los individuas 
+#Momparando las sigueintes pruebas de hipotesis simultaneas: (Dada una significancia de 0.05)
 
-m_2ceros=c(0,0) #vamos a comparar todas nuestras preubas de hipotesis con cero 
-#Con esto vamos a ver si existe una igualdad entre pendientes 
-#Vamos a comparar las sigueintes pruebas de hipotesis: (Dada una significancia de 0.05)
-#(Ho) E(puntaje;Trat = Control,Sexo = h) = E(puntaje;Trat = Control,Sexo = m) vs (Ha) E(puntaje;Trat = Control,Sexo = h) ≠ E(puntaje;Trat = Control,Sexo = m)
-#(Ho) B_1 = 0  vs (Ha) B_1 ≠ 0
-m1 =c(0)
-K4_c = matrix(c(0,1,0,0,0,0), ncol=6, nrow = 1, byrow = TRUE)
-summary(glht(modelo, linfct = K4_c, rhs = m1), test= Ftest())
-#De esta prueba nos dio que el p-value es de: 0.6572, por lo que no se rechaza (Ho) 
+#(Ho) 1) E(puntaje;Trat = Control,Sexo = h) = E(puntaje;Trat = Control,Sexo = m) vs (Ha) E(puntaje;Trat = Control,Sexo = h) ≠ E(puntaje;Trat = Control,Sexo = m) ^
+#     2) E(puntaje;Trat = Trat1,Sexo = h) = E(puntaje;Trat = Trat1,Sexo = m) vs (Ha) E(puntaje;Trat = Trat1,Sexo = h) ≠ E(puntaje;Trat = Trat1,Sexo = m) ^
+#     3) E(puntaje;Trat = Trat2,Sexo = h) = E(puntaje;Trat = Trat2,Sexo = m) vs (Ha) E(puntaje;Trat = Trat2,Sexo = h) ≠ E(puntaje;Trat = Trat2,Sexo = m)
 
+#Pasandolo a terminos de nuestras Bi
 
-#(Ho) E(puntaje;Trat = Trat1,Sexo = h) = E(puntaje;Trat = Trat1,Sexo = m) vs (Ha) E(puntaje;Trat = Trat1,Sexo = h) ≠ E(puntaje;Trat = Trat1,Sexo = m)
-#(Ho) B_1 = 0 ^ B_4 = 0 vs (Ha) B_1 ≠ 0 v B_4 ≠ 0
-K4_1 = matrix(c(0,1,0,0,0,0,
-                0,0,0,0,1,0), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct = K4_1, rhs = m_2ceros), test= Ftest())
-#De esta prueba nos dio que el p-value es de: 0.001023 , por lo que  se rechaza (Ho),  
-#Hay una diferencia, pero no se sabe si es mejor  en hombres o mujeres el funcionamiento del medicamento
-#Escribimos una prueba simultanea para ver que provoco el rechazo de (Ho)
+#(Ho) B_1 = 0  ^                      (Ha) B_1 ≠ 0
+#     B_1 + B_4 = 0  ^    vs               B_1 + B_4 ≠ 0
+#     B_1 + B_5 = 0   ^                    B_1 + B_5 ≠ 0
 
-#Las preubas de hipotesis a Analisas son:
-# H0_1: B_1 = 0 vs Ha_1: B_1 ≠ 0
-# H0_2: B_4 = 0 vs Ha_2: B_4 ≠ 0
-# H0_3: B_1 - B_4 = 0 vs Ha_3: B_1 - B_4 ≠ 0
-m_sim = c(0,0,0)
-K4_Sim = matrix(c(0,1,0,0,0,0,
-                  0,0,0,0,1,0,
-                  0,1,0,0,-1,0), ncol=6, nrow = 3, byrow = TRUE) #Matrices para realizar nuestras preubas de hipotesis
-#Corriendo nuestra prueba de hipotesis, simultanea
-summary(glht(modelo, linfct = K4_Sim, rhs = m_sim))
-#Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1 + B5*Y_m*X_t2
-#Con esto pdemos ver que solo tenemos informacion suficiente para saber que B_4 ≠ 0
+#Observemos que podemos resumir esta prueba de hipotesis de la siguiente forma
 
+#(Ho)  B_4 = 0 ^ B_5 = 0 vs (Ha) B_4 ≠ 0 v B_5 ≠ 0
 
+K4 = matrix(c(0,0,0,0,1,0,
+              0,0,0,0,0,1), ncol=6, nrow = 2, byrow = TRUE)
+summary(glht(modelo, linfct = K4, rhs = m_2), test= Ftest())
+#El valor del p-value de prueba de hipotesis es de:  0.006433, por lo que se rechaza (Ho)
+#Lo que se puede interpretar como que hay una diferencia entre los puntajes de depresion de los hombres y las mujeres, para al menos un tratamiento
+#Por lo que el sexo si tiene un efecto en el puntuaje de depresion de los individuos en al menos un tratamiento
 
-#(Ho) E(puntaje;Trat = Trat2,Sexo = h) = E(puntaje;Trat = Trat2,Sexo = m) vs (Ha) E(puntaje;Trat = Trat2,Sexo = h) ≠ E(puntaje;Trat = Trat2,Sexo = m)
-#(Ho) B_1 = 0 ^ B_5 = 0 vs (Ha) B_1 ≠ 0 v B_5 ≠ 0
-K4_2 = matrix(c(0,1,0,0,0,0,
-                0,0,0,0,0,1), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct = K4_2, rhs = m_2ceros), test= Ftest())
-#De esta prueba nos dio que el p-value es de: 0.895 , por lo que no se rechaza (Ho)
+#Veamos que fue lo que provoco el rechazo anterior, comparando las Esperanzas, por seprado
+ 
+#Vamos a hacer todas las posibilidades, comparando las esperanzas, apra ver donde, existe una relacion de Esperanzas, (Con las esperanzas de arriba)
+#(Ho)  1) = 2)
+#      1) = 3) 
+#      2) = 3)
 
-#Con los datos anteriores vamos a hacer un modelo reducido, para poder trabajar mejor 
+#Pasandolo a terminos de nuestras Bi 
+
+# (Ho) B4 = 0
+#      B5 = 0    
+#      B4-B5 = 0       
+
+K4_2 = matrix(c(0,0,0,0,1,0,
+                0,0,0,0,0,1,
+                0,0,0,0,1,-1), ncol=6, nrow = 3, byrow = TRUE)
+summary(glht(modelo, linfct = K4_2, rhs = m_3))
+#Con esta prueba podemos identificar que B5 no es diferente de 0,  ??? ---Preguntar por la interpretacion
+
 
 
 #5) Ajustando el modelo reducido
-#Por el paso de arriba observamos que solo se debe quedar b_4, para ello, proponemos el sigueinte modelo 
+#Por el paso de arriba observamos que solo se debe quedar B5, para ello, proponemos el sigueinte modelo 
 names(data)
-
-modelo_reducido <- lm(Puntaje ~  Trat +I((Trat == 'Trat2')*(Sexo == 'Mujer')), data = data) 
-                      
+# Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1
+modelo_reducido <- lm(Puntaje ~  Sexo + Trat +I((Trat == 'Trat1')*(Sexo == 'Mujer')), data = data) 
 summary(modelo_reducido)
+
 #Con este modelo podemos ver que nuestro modelo de regresion si tiene, sentido y podemos trabajar con el 
 
 #Hagamos un pequeña prueba de hipotesis para ver si nuestro modelo reducido es mejor que el modelo orignal 
 anova(modelo_reducido, modelo) #Esta curioso, me dio que el modelo original es mejor que el modelo reducido 
 
-#Dando las expreciones del nuevo modelo de regresion reducido
-#Puntaje = B0 + B1*X_t1 +B2*X_t2  + B3*Y_m*X_t2
+#Dando las expreciones del nuevo modelo de regresion reducido (De nuevo deje expresadas las variables de donde viene, para poder hacer un mejor un mejor desarrollo de los siginetes pasos)
+# Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1
 #
 #Vamos a analizar las expresiones de los puntajes promedios para cada nivel de las variables categoricas
 #E(puntaje;Trat = Control,Sexo = h) =  B0  
-#E(puntaje;Trat = Trat1,Sexo = h)   =  B0 + B1*X_t1 
-#E(puntaje;Trat = Trat2,Sexo = h)   =  B0 + B2*X_t2 
-#E(puntaje;Trat = Control,Sexo = m) =  B0 
-#E(puntaje;Trat = Trat1,Sexo = m)   =  B0 + B1*X_t1 
-#E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B2*X_t2 + B3*Y_m*X_t2
+#E(puntaje;Trat = Trat1,Sexo = h)   =  B0 + B2*X_t1 
+#E(puntaje;Trat = Trat2,Sexo = h)   =  B0 + B3*X_t2 
+#E(puntaje;Trat = Control,Sexo = m) =  B0 + B1*Y_m
+#E(puntaje;Trat = Trat1,Sexo = m)   =  B0 + B1*Y_m + B2*X_t1  + b4*Y_m*X_t1
+#E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B1*Y_m + B2*X_t1+ B3*X_t2 
 #
 
 #Obs: para los sigueintes incisos donde hare una comparacion sobre el desempeño de los medicamentos, usare el modelo sin reducier
 #ya que por la prueba anova que comparaba ambos modelos, salio que el mejor modelo era el que no estaba reducido 
 
 #Obs: Como intepretacion personal, para comparar si un medicamento es mejor,dividire la prueba de hipotesis en base al sexo, 
-#a esto me refieron que el medicamento A, es mejor que el medicameno B y que el control somo en un sexo particular.
+#y luego hare una prueba simultanea, para ver que efectivamente el medicamento esta siendo mejor
 
 
-#6) Prueba de Hipotesis,  Nuevo tratameinto (Tratamiendo 2), tiene un mejor desempeño 
-#Haciendo la prueba de hip, para los hombres
-#E(puntaje;Trat = Trat2,Sexo = h) >= E(puntaje;Trat = Trat1,Sexo = h) y  E(puntaje;Trat = Trat2,Sexo = h) >= E(puntaje;Trat = Control,Sexo = h)
-# Ho: B3-B2<=0 y B3<=0
-k_6h =matrix(c(0,0,-1,1,0,0,
-             0,0,0,1,0,0), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct =k_6h , rhs = c(0,0)), alternative = "less", test = Ftest())
+#6) Prueba de Hipotesis,  Nuevo tratameinto (Tratamiendo 2), tiene un mejor desempeño (a esto me refiero de que el medicamento baje los niveles de ansiedad en los pacientes)
+#Haciendo la prueba de hip
+#E(puntaje;Trat = Trat2,Sexo = h) <= E(puntaje;Trat = Trat1,Sexo = h) y  E(puntaje;Trat = Trat2,Sexo = h) <= E(puntaje;Trat = Control,Sexo = h) ^
+#E(puntaje;Trat = Trat2,Sexo = m) <= E(puntaje;Trat = Trat1,Sexo = m) y  E(puntaje;Trat = Trat2,Sexo = m) <= E(puntaje;Trat = Control,Sexo = m)
+
+# Ho: B3+B5-B2-B4<=0  
+#     B3+B5<=0
+#     B3-B2<=0 
+#     B3<=0
+k_6 =matrix(c(0,0,-1,1,-1,1,
+              0,0,0,1,0,1,
+              0,0,-1,1,0,0,
+              0,0,0,1,0,0), ncol=6, nrow = 4, byrow = TRUE)
+summary(glht(modelo, linfct =k_6 , rhs = c(0,0,0,0)), alternative = "greater", test = Ftest())
 
 
-
-#Haciendo la prueba de hip, para las mujeres
-#E(puntaje;Trat = Trat2,Sexo = m) >= E(puntaje;Trat = Trat1,Sexo = m) y  E(puntaje;Trat = Trat2,Sexo = m) >= E(puntaje;Trat = Control,Sexo = m)
-# Ho: B3+B5-B2-B4<=0 y B3+B5<=0
-k_6m =matrix(c(0,0,-1,1,-1,1,
-             0,0,0,1,0,1), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct =k_6m , rhs = c(0,0)), alternative = "less", test = Ftest())
-
-
-#Conclusion:
-#Hombres:
-# En este caso, observamos que el Nuevo tratameinto (Trat 2) en hombres, no es mejor que el tratamiento 1 y control
-#Mujeres:
-#
+#Conclusiones:
 
 
 #7) Preuba de Hipotesis, Tratamiento Actual (Tratamiento 1), tiene un mejor desempeño
 #Haciendo la prueba de hip, para los hombres
-#E(puntaje;Trat = Trat1,Sexo = h) <= E(puntuaje;Trat = Trat2,Sexo = h) y E(puntaje;Trat = Trat1,Sexo = h) <= E(puntaje;Trat = Control,Sexo = h)
-# Ho: B2-B3<=0 y B2<=0
-k_7h =matrix(c(0,0,1,-1,0,0,
-             0,0,1,0,0,0), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct =k_7h , rhs = c(0,0)), alternative = "less", test = Ftest())
-
-
-#Haciendo la preuba de hip, para las mujeres
+#E(puntaje;Trat = Trat1,Sexo = h) <= E(puntuaje;Trat = Trat2,Sexo = h) y E(puntaje;Trat = Trat1,Sexo = h) <= E(puntaje;Trat = Control,Sexo = h) y
 #E(puntaje;Trat = Trat1,Sexo = m) <= E(puntuaje;Trat = Trat2,Sexo = m) y E(puntaje;Trat = Trat1,Sexo = m) <= E(puntaje;Trat = Control,Sexo = m)
-# Ho: B2+B4-B3-B5<=0 y B2+B4<=0
-k_7m =matrix(c(0,0,1,-1,1,-1,
-             0,0,1,0,1,0), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct =k_7m , rhs = c(0,0)), alternative = "less")
+
+# Ho: B2-B3<=0 
+#     B2<=0
+#     B2+B4-B3-B5<=0 
+#     B2+B4<=0
+
+k_7 =matrix(c(0,0,1,-1,0,0,
+              0,0,1,0,0,0,
+              0,0,1,-1,1,-1,
+              0,0,1,0,1,0), ncol=6, nrow = 4, byrow = TRUE)
+summary(glht(modelo, linfct =k_7 , rhs = c(0,0,0,0)), alternative = "greater", test = Ftest())
 
 
-#Conclusion:
-#Hombres:
-#
-#Mujeres:
-#
 
-
-
-
+#Conclusiones:
 
 
