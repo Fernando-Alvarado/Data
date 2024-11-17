@@ -33,6 +33,12 @@ str(data) #Cargando una vista previa de nuestros datos
 #Donde en este caso, Hombre y Control seran nuestros niveles de referencia 
 
 #1) Empecemos a hacer un Analisis descriptivo de los datos 
+  data %>% group_by(Trat,Sexo) %>%  #Hacienod un analisis descriptivo de nuestros datos, para saber cosas como la media, mediana, varianza y el numero de observaciones
+  summarise(Observaciones = n(),
+            Media = round(mean(Puntaje),2),
+            Mediana = median(Puntaje),
+            Varianza = round(var(Puntaje),2))
+
 
 
  #Hagamos una grafica rapido, para ver la distribucion de nuestros datos y verlos de forma grafica, en este caso grafico el puntaje de depresion
@@ -49,6 +55,7 @@ ggplot(data, aes(x = 1:nrow(data), y = Puntaje, color = Trat, size = Sexo)) +
   theme_minimal()
  
 
+
 plot(data) 
 library(GGally)
 ggpairs(data)
@@ -56,11 +63,19 @@ ggpairs(data)
 #sexo tiene solo dos niveles mientras que tratamiento tiene 3 niveles y la varible continua al parecer tendria una
 #distribucion normal, pero tendriamos que verificarlo 
 
+x11()
 boxplot(Puntaje ~ Trat * Sexo, data = data,#Un consejo a a la hora de correr esta grafica es que la hagan mas grande, ya que quita los labs del eje x, por que no caben todos y se hace un poco complicado de interpretar
         main = "Boxplot de  Tratamiento, Sexo vs Puntaje Depresion",
         xlab = "Tratamiento y Sexo",
         ylab = "Puntaje de Depresión",
-        col = c("lightblue", "lightgreen"))
+        col = c("lightblue", "lightgreen", "lightsalmon"))
+stripchart(Puntaje~Trat+Sexo, data = datos,
+        method = "jitter",
+        pch = 19,
+        col = 2:4,
+        vertical = TRUE,
+        add = TRUE)
+
 
 #Con esta grafica  podemos ver que el comportamiento de los medicamentes, ambos funcionan, pero al parecer el tratamiento 1 parece funcionar
 #mejor tanto en hombres como en mujeres ya que baja mas en media el puntuaje de depresion, pero tendriamos que hacer un analisis mas profundo
@@ -106,30 +121,45 @@ ggplot(data, aes(x = Trat, y = Predicciones, color = Sexo, group = Sexo)) +
   scale_color_brewer(palette = "Set1")  # Mejora estética con colores
 
 length(coef(modelo))
-#Vamos a analizar las expresiones de los puntajes promedios para cada nivel de las variables categoricas
-#Dejare expresada la varaible a lo que correponde las Bi, solo de manera ilustrativa para podecer desarrollar mejor los demas incisos
-#E(puntaje;Trat = Control,Sexo = h) =  B0  
-#E(puntaje;Trat = Trat1,Sexo = h)   =  B0 + B2*X_t1  
-#E(puntaje;Trat = Trat2,Sexo = h)   =  B0 + B3*X_t2 
-#E(puntaje;Trat = Control,Sexo = m) =  B0 + B1*Y_m 
-#E(puntaje;Trat = Trat1,Sexo = m)   =  B0 + B1*Y_m + B2*X_t1 + B4*Y_m*X_t1
-#E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B1*Y_m + B3*X_t2 + B5*Y_m*X_t2
 
 
 #3) Veamos que pasa con nuestra tabla ANOVA
+
+summary(modelo)
+
+B0 <- modelo[["coefficients"]][["(Intercept)"]]
+B1 <- modelo[["coefficients"]][["SexoMujer"]]
+B2 <- modelo[["coefficients"]][["TratTrat1"]]
+B3 <- modelo[["coefficients"]][["TratTrat2"]]
+B4 <- modelo[["coefficients"]][["SexoMujer:TratTrat1"]]
+B5 <- modelo[["coefficients"]][["SexoMujer:TratTrat2"]]
+
+
+#Vamos a analizar las expresiones de los puntajes promedios para cada nivel de las variables categoricas
+
+# E(puntaje; Trat = Control, Sexo = h) = B0
+cat("E(puntaje; Trat = Control, Sexo = h) =", B0, "\n")
+# E(puntaje; Trat = Trat1, Sexo = h) = B0 + B2
+cat("E(puntaje; Trat = Trat1, Sexo = h) =", B0 + B2, "\n")
+# E(puntaje; Trat = Trat2, Sexo = h) = B0 + B3
+cat("E(puntaje; Trat = Trat2, Sexo = h) =", B0 + B3, "\n")
+# E(puntaje; Trat = Control, Sexo = m) = B0 + B1
+cat("E(puntaje; Trat = Control, Sexo = m) =", B0 + B1, "\n")
+# E(puntaje; Trat = Trat1, Sexo = m) = B0 + B1 + B2 + B4
+cat("E(puntaje; Trat = Trat1, Sexo = m) =", B0 + B1 + B2 + B4, "\n")
+# E(puntaje; Trat = Trat2, Sexo = m) = B0 + B1 + B3 + B5
+cat("E(puntaje; Trat = Trat2, Sexo = m) =", B0 + B1 + B3 + B5, "\n")
+
+
 #Planteemos la preuba ANOVA 
 #(H0):B1 = B2 = B3 = ... = Bk = 0 vs (Ha):Al menos un Bi ≠ 0, para alguna variable i
-summary(modelo) #Nos apoyamos de summary para ver los resultados de la prueba #?????????????????---------------------------------- Tengo dudas, sobre como evaluar la salida individual de las cosas, ya que B_4 me sale que es diferente de cero de forma individual, pero con conjunto con B_1, es cero y tengo una recta parelela
+summary(modelo) #Nos apoyamos de summary para ver los resultados de la prueba 
 #Con este resumen vemos que se rechaza Ho, en la preuba asociada a la tabla ANOVA, lo que impica que nuestro modelo tiene sentido 
 #Lo que implica que el sexo y los tratamientos ayudan a modelas al puntuaje de depresion 
 
 
 #4) Vamos a ver si el sexo tiene algun efecto en el puntuaje, i.e. al menos paara un tratamiento existe un efecto derivado del sexo
 
-#Modelo sin sexo
-m_2=c(0,0)
-m_1 =c(0)
-m_3 = c(0,0,0)
 #Vamos a ver si el sexo tiene algun efecto en el puntuaje de los individuas 
 #Momparando las sigueintes pruebas de hipotesis simultaneas: (Dada una significancia de 0.05)
 
@@ -150,7 +180,7 @@ m_3 = c(0,0,0)
 K4 = matrix(c(0,1,0,0,0,0,
               0,1,0,0,1,0,
               0,1,0,0,0,1), ncol=6, nrow = 2, byrow = TRUE)
-summary(glht(modelo, linfct = K4, rhs = m_2), test= Ftest())
+summary(glht(modelo, linfct = K4, rhs = c(0,0)), test= Ftest())
 #El valor del p-value de prueba de hipotesis es de:  0.006433, por lo que se rechaza (Ho)
 #Lo que se puede interpretar como que hay una diferencia entre los puntajes de depresion de los hombres y las mujeres, para al menos un tratamiento
 #Por lo que el sexo si tiene un efecto en el puntuaje de depresion de los individuos en al menos un tratamiento
@@ -174,33 +204,49 @@ K4_2 = matrix(c(0,1,0,0,0,0,
                 0,0,0,0,0,1,
                 0,0,0,0,1,-1), ncol=6, nrow = 4, byrow = TRUE)
 summary(glht(modelo, linfct = K4_2, rhs = c(0,0,0,0)))
-#Con esta prueba podemos identificar que B5 no es diferente de 0,  ??? ---Preguntar por la interpretacion
+#Con esta prueba podemos identificar que B5 y B1 no es diferente de 0
 
 
 
 #5) Ajustando el modelo reducido
 #Por el paso de arriba observamos que solo se debe salir B5 y B1, para ello, proponemos el sigueinte modelo 
 names(data)
-# Puntaje = B0 + B1*X_t1 +B2*X_t2 + B3*Y_m*X_t1
+# Puntaje = b0 + b1*X_t1 +b2*X_t2 + b3*Y_m*X_t1
 modelo_reducido <- lm(Puntaje ~   Trat +I((Trat == 'Trat1')*(Sexo == 'Mujer')), data = data) 
 summary(modelo_reducido)
 
 #Con este modelo podemos ver que nuestro modelo de regresion si tiene, sentido y podemos trabajar con el 
 
 #Hagamos un pequeña prueba de hipotesis para ver si nuestro modelo reducido es mejor que el modelo orignal 
-anova(modelo_reducido, modelo) #Esta curioso, me dio que el modelo original es mejor que el modelo reducido 
-
+anova(modelo_reducido, modelo) #Esta prueba nos dice que el modelo reducido es mejor que el modelo original
 #Dando las expreciones del nuevo modelo de regresion reducido (De nuevo deje expresadas las variables de donde viene, para poder hacer un mejor un mejor desarrollo de los siginetes pasos)
-# Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1
+
 #
+
+b0 <- modelo_reducido[["coefficients"]][["(Intercept)"]]
+b1 <- modelo_reducido[["coefficients"]][["TratTrat1"]]
+b2 <- modelo_reducido[["coefficients"]][["TratTrat2"]]
+b3 <- modelo_reducido[["coefficients"]][["I((Trat == \"Trat1\") * (Sexo == \"Mujer\"))"]]
+
+
+
 #Vamos a analizar las expresiones de los puntajes promedios para cada nivel de las variables categoricas
-#E(puntaje;Trat = Control,Sexo = h) =  B0  
-#E(puntaje;Trat = Trat1,Sexo = h)   =  B0 + B2*X_t1 
-#E(puntaje;Trat = Trat2,Sexo = h)   =  B0 + B3*X_t2 
-#E(puntaje;Trat = Control,Sexo = m) =  B0 + B1*Y_m
-#E(puntaje;Trat = Trat1,Sexo = m)   =  B0 + B1*Y_m + B2*X_t1  + b4*Y_m*X_t1
-#E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B1*Y_m + B3*X_t2 
-#
+# Vamos a analizar las expresiones de los puntajes promedios para cada nivel de las variables categóricas
+
+# E(puntaje; Trat = Control, Sexo = h) = b0
+cat("E(puntaje; Trat = Control, Sexo = h) =", b0, "\n")
+# E(puntaje; Trat = Trat1, Sexo = h) = b0 + b1
+cat("E(puntaje; Trat = Trat1, Sexo = h) =", b0 + b1, "\n")
+# E(puntaje; Trat = Trat2, Sexo = h) = b0 + b2
+cat("E(puntaje; Trat = Trat2, Sexo = h) =", b0 + b2, "\n")
+# E(puntaje; Trat = Control, Sexo = m) = b0
+cat("E(puntaje; Trat = Control, Sexo = m) =", b0, "\n")
+# E(puntaje; Trat = Trat1, Sexo = m) = b0 + b1 + b3
+cat("E(puntaje; Trat = Trat1, Sexo = m) =", b0 + b1 + b3, "\n")
+# E(puntaje; Trat = Trat2, Sexo = m) = b0 + b2
+cat("E(puntaje; Trat = Trat2, Sexo = m) =", b0 + b2, "\n")
+
+
 
 #Obs: para los sigueintes incisos donde hare una comparacion sobre el desempeño de los medicamentos, usare el modelo sin reducier
 #ya que por la prueba anova que comparaba ambos modelos, salio que el mejor modelo era el que no estaba reducido 
@@ -216,22 +262,25 @@ anova(modelo_reducido, modelo) #Esta curioso, me dio que el modelo original es m
 
 #Expresando la preuba de hipotesis (Ho)
 
-# (Ho):  B3-B2 >= 0 ^
-#        B3 >= 0  ^
-#        B3-B2-B4  >= 0
+# (Ho):  b2-b1 >= 0 ^
+#        b2 >= 0  ^
+#        b2-b1-b3 >= 0
 
-k_6 =matrix(c(0,0,-1,1,0,
-             0,0,0,1,0,
-             0,0,-1,1,-1), ncol=5, nrow = 3, byrow = TRUE)
+summary(modelo_reducido)
+
+k_6 =matrix(c(0,0,1,0,
+              0,-1,1,0,
+              0,-1,1,-1), ncol=4, nrow = 4, byrow = TRUE)
 
 
-summary(glht(modelo_reducido, linfct =k_6 , rhs = c(0,0,0)), alternative = "less", test=Ftest())
+summary(glht(modelo_reducido, linfct =k_6 , rhs = c(0,0,0, 0), alternative = "less"))
 
 
 #Conclusiones:
+#Como conclusion podemos observar que unicamente el Tratamiento 2 (El nuevo) solamente es mejor que el control, tanto en hombres, como en mujeres, ya que se rechazo estadisticamente que B2 >=0.
+#Por lo que el el tratamiento 2, no es el mejor tratameinto de todo nuestro estudio, ya que en promedio no es que el mas baja los niveles de ansiedad en los pacientes
 
 
-# Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1
 #7) Preuba de Hipotesis, Tratamiento Actual (Tratamiento 1), tiene un mejor desempeño
 #Haciendo la prueba de hip, para los hombres
 #E(puntaje;Trat = Trat1,Sexo = h) < E(puntuaje;Trat = Trat2,Sexo = h) y E(puntaje;Trat = Trat1,Sexo = h) < E(puntaje;Trat = Control,Sexo = h) y
@@ -239,24 +288,22 @@ summary(glht(modelo_reducido, linfct =k_6 , rhs = c(0,0,0)), alternative = "less
 
 #Expresando la preuba de hipotesis (Ho)
 
-#(Ho): B2-B3 >= 0 ^
-#      B2 >= 0 ^
-#      B2+B4-B3 >= 0 ^
-#      B2+B4 >= 0
-
-
-k_7 =matrix(c(0,0,1,-1,0,
-             0,0,1,0,0,
-             0,0,1,-1,1,
-             0,0,1,0,1), ncol=5, nrow = 4, byrow = TRUE)
-
-summary(glht(modelo_reducido, linfct =k_7 , rhs = c(0,0,0,0)), alternative = "less",test=Ftest())
+# (Ho):  b1-b2 >= 0 ^
+#        b1 >= 0 ^
+#        b1+b3-b2 >= 0 ^
+#        b1+b3 >= 0
 
 
 
+k_7 =matrix(c(0,1,-1,0,
+              0,1,0,0,
+              0,1,-1,1,
+              0,1,0,1), ncol=4, nrow = 4, byrow = TRUE)
 
+summary(glht(modelo_reducido, linfct =k_7 , rhs = c(0,0,0,0), alternative = "less"))
 
 
 #Conclusiones:
-
+#Con estoy prueba de hipotesis, obeservamos que se rechazaron todas nuestras preubas de hipotesis (Ho), con lo que podemos conclir que el medicamente viejo (Tratamiento 1) 
+#es mejor que el medicamento nuevo (Tratamiento 2) y el control, tanto en hombres como en mujeres, ya que en promedio baja mas los niveles de ansiedad en los pacientes.
 
