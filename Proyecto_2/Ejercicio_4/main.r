@@ -196,7 +196,7 @@ anova(modelo_reducido, modelo) #Esta curioso, me dio que el modelo original es m
 #E(puntaje;Trat = Trat2,Sexo = h)   =  B0 + B3*X_t2 
 #E(puntaje;Trat = Control,Sexo = m) =  B0 + B1*Y_m
 #E(puntaje;Trat = Trat1,Sexo = m)   =  B0 + B1*Y_m + B2*X_t1  + b4*Y_m*X_t1
-#E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B1*Y_m + B2*X_t1+ B3*X_t2 
+#E(puntaje;Trat = Trat2,Sexo = m)   =  B0 + B1*Y_m + B3*X_t2 
 #
 
 #Obs: para los sigueintes incisos donde hare una comparacion sobre el desempeño de los medicamentos, usare el modelo sin reducier
@@ -208,38 +208,49 @@ anova(modelo_reducido, modelo) #Esta curioso, me dio que el modelo original es m
 
 #6) Prueba de Hipotesis,  Nuevo tratameinto (Tratamiendo 2), tiene un mejor desempeño (a esto me refiero de que el medicamento baje los niveles de ansiedad en los pacientes)
 #Haciendo la prueba de hip
-#E(puntaje;Trat = Trat2,Sexo = h) <= E(puntaje;Trat = Trat1,Sexo = h) y  E(puntaje;Trat = Trat2,Sexo = h) <= E(puntaje;Trat = Control,Sexo = h) ^
-#E(puntaje;Trat = Trat2,Sexo = m) <= E(puntaje;Trat = Trat1,Sexo = m) y  E(puntaje;Trat = Trat2,Sexo = m) <= E(puntaje;Trat = Control,Sexo = m)
+#E(puntaje;Trat = Trat2,Sexo = h) < E(puntaje;Trat = Trat1,Sexo = h) y  E(puntaje;Trat = Trat2,Sexo = h) < E(puntaje;Trat = Control,Sexo = h) ^
+#E(puntaje;Trat = Trat2,Sexo = m) < E(puntaje;Trat = Trat1,Sexo = m) y  E(puntaje;Trat = Trat2,Sexo = m) < E(puntaje;Trat = Control,Sexo = m)
 
-# Ho: B3+B5-B2-B4<=0  
-#     B3+B5<=0
-#     B3-B2<=0 
-#     B3<=0
-k_6 =matrix(c(0,0,-1,1,-1,1,
-              0,0,0,1,0,1,
-              0,0,-1,1,0,0,
-              0,0,0,1,0,0), ncol=6, nrow = 4, byrow = TRUE)
-summary(glht(modelo, linfct =k_6 , rhs = c(0,0,0,0)), alternative = "greater", test = Ftest())
+#Expresando la preuba de hipotesis (Ho)
+
+# (Ho):  B3-B2 >= 0 ^
+#        B3 >= 0  ^
+#        B3-B2-B4  >= 0
+
+k_6 =matrix(c(0,0,-1,1,0,
+             0,0,0,1,0,
+             0,0,-1,1,-1), ncol=5, nrow = 3, byrow = TRUE)
+
+
+summary(glht(modelo_reducido, linfct =k_6 , rhs = c(0,0,0)), alternative = "less", test=Ftest())
 
 
 #Conclusiones:
 
 
+# Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1
 #7) Preuba de Hipotesis, Tratamiento Actual (Tratamiento 1), tiene un mejor desempeño
 #Haciendo la prueba de hip, para los hombres
-#E(puntaje;Trat = Trat1,Sexo = h) <= E(puntuaje;Trat = Trat2,Sexo = h) y E(puntaje;Trat = Trat1,Sexo = h) <= E(puntaje;Trat = Control,Sexo = h) y
-#E(puntaje;Trat = Trat1,Sexo = m) <= E(puntuaje;Trat = Trat2,Sexo = m) y E(puntaje;Trat = Trat1,Sexo = m) <= E(puntaje;Trat = Control,Sexo = m)
+#E(puntaje;Trat = Trat1,Sexo = h) < E(puntuaje;Trat = Trat2,Sexo = h) y E(puntaje;Trat = Trat1,Sexo = h) < E(puntaje;Trat = Control,Sexo = h) y
+#E(puntaje;Trat = Trat1,Sexo = m) < E(puntuaje;Trat = Trat2,Sexo = m) y E(puntaje;Trat = Trat1,Sexo = m) < E(puntaje;Trat = Control,Sexo = m)
 
-# Ho: B2-B3<=0 
-#     B2<=0
-#     B2+B4-B3-B5<=0 
-#     B2+B4<=0
+#Expresando la preuba de hipotesis (Ho)
 
-k_7 =matrix(c(0,0,1,-1,0,0,
-              0,0,1,0,0,0,
-              0,0,1,-1,1,-1,
-              0,0,1,0,1,0), ncol=6, nrow = 4, byrow = TRUE)
-summary(glht(modelo, linfct =k_7 , rhs = c(0,0,0,0)), alternative = "greater", test = Ftest())
+#(Ho): B2-B3 >= 0 ^
+#      B2 >= 0 ^
+#      B2+B4-B3 >= 0 ^
+#      B2+B4 >= 0
+
+
+k_7 =matrix(c(0,0,1,-1,0,
+             0,0,1,0,0,
+             0,0,1,-1,1,
+             0,0,1,0,1), ncol=5, nrow = 4, byrow = TRUE)
+
+summary(glht(modelo_reducido, linfct =k_7 , rhs = c(0,0,0,0)), alternative = "less",test=Ftest())
+
+
+
 
 
 
