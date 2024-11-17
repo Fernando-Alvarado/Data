@@ -145,10 +145,11 @@ m_3 = c(0,0,0)
 
 #Observemos que podemos resumir esta prueba de hipotesis de la siguiente forma
 
-#(Ho)  B_4 = 0 ^ B_5 = 0 vs (Ha) B_4 ≠ 0 v B_5 ≠ 0
+#(Ho) B_1 = 0  ^  B_4 = 0 ^ B_5 = 0 vs (Ha) B_4 ≠ 0 v B_5 ≠ 0
 
-K4 = matrix(c(0,0,0,0,1,0,
-              0,0,0,0,0,1), ncol=6, nrow = 2, byrow = TRUE)
+K4 = matrix(c(0,1,0,0,0,0,
+              0,1,0,0,1,0,
+              0,1,0,0,0,1), ncol=6, nrow = 2, byrow = TRUE)
 summary(glht(modelo, linfct = K4, rhs = m_2), test= Ftest())
 #El valor del p-value de prueba de hipotesis es de:  0.006433, por lo que se rechaza (Ho)
 #Lo que se puede interpretar como que hay una diferencia entre los puntajes de depresion de los hombres y las mujeres, para al menos un tratamiento
@@ -163,23 +164,25 @@ summary(glht(modelo, linfct = K4, rhs = m_2), test= Ftest())
 
 #Pasandolo a terminos de nuestras Bi 
 
-# (Ho) B4 = 0
+# (Ho) B1 = 0
+#      B4 = 0
 #      B5 = 0    
 #      B4-B5 = 0       
 
-K4_2 = matrix(c(0,0,0,0,1,0,
+K4_2 = matrix(c(0,1,0,0,0,0,
+                0,0,0,0,1,0,
                 0,0,0,0,0,1,
-                0,0,0,0,1,-1), ncol=6, nrow = 3, byrow = TRUE)
-summary(glht(modelo, linfct = K4_2, rhs = m_3))
+                0,0,0,0,1,-1), ncol=6, nrow = 4, byrow = TRUE)
+summary(glht(modelo, linfct = K4_2, rhs = c(0,0,0,0)))
 #Con esta prueba podemos identificar que B5 no es diferente de 0,  ??? ---Preguntar por la interpretacion
 
 
 
 #5) Ajustando el modelo reducido
-#Por el paso de arriba observamos que solo se debe quedar B5, para ello, proponemos el sigueinte modelo 
+#Por el paso de arriba observamos que solo se debe salir B5 y B1, para ello, proponemos el sigueinte modelo 
 names(data)
-# Puntaje = B0 + B1*Y_m + B2*X_t1 +B3*X_t2 + b4*Y_m*X_t1
-modelo_reducido <- lm(Puntaje ~  Sexo + Trat +I((Trat == 'Trat1')*(Sexo == 'Mujer')), data = data) 
+# Puntaje = B0 + B1*X_t1 +B2*X_t2 + B3*Y_m*X_t1
+modelo_reducido <- lm(Puntaje ~   Trat +I((Trat == 'Trat1')*(Sexo == 'Mujer')), data = data) 
 summary(modelo_reducido)
 
 #Con este modelo podemos ver que nuestro modelo de regresion si tiene, sentido y podemos trabajar con el 
